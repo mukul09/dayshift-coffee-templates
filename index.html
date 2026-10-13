@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dayshift Coffee — site templates</title>
+<meta name="description" content="Four self-contained concept pages for a coffee shop + wedding coffee-cart site.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Figtree:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap">
+<style>
+  :root{
+    --bg:#FFF4E2; --ink:#3B2146; --ink-soft:#7A5B80; --panel:#FFFBF2; --line:#3A1C45;
+    --coral:#FF6B5A; --coralDk:#D6453C; --rule:#E3C9C0;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{ --bg:#1A1020; --ink:#F7E9DC; --ink-soft:#B79BBE; --panel:#271A2E; --line:#17091C; --rule:#432C4A; }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--ink); font-family:"Figtree",system-ui,sans-serif;
+    line-height:1.6; padding:clamp(24px,6vw,72px) 20px; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:900px;margin:0 auto}
+  .kicker{
+    display:inline-block;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--coralDk);font-weight:700
+  }
+  h1{
+    font-family:"Fredoka",sans-serif;font-weight:600;font-size:clamp(32px,6vw,54px);
+    margin:14px 0 8px;line-height:1.05
+  }
+  p.lede{color:var(--ink-soft);max-width:60ch;margin:0 0 40px;font-size:clamp(15px,2vw,18px)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+  a.card{
+    display:block;background:var(--panel);border:3px solid var(--line);border-radius:16px;
+    padding:22px;text-decoration:none;color:var(--ink);box-shadow:0 6px 0 var(--line);
+    transition:transform .15s ease,box-shadow .15s ease
+  }
+  a.card:hover{transform:translateY(-3px);box-shadow:0 9px 0 var(--line)}
+  a.card:active{transform:translateY(2px);box-shadow:0 3px 0 var(--line)}
+  a.card h2{font-family:"Fredoka",sans-serif;font-weight:600;font-size:21px;margin:0 0 8px}
+  a.card p{color:var(--ink-soft);font-size:14.5px;margin:0}
+  .tag{
+    font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--coralDk);margin-bottom:10px;display:block
+  }
+  footer{margin-top:48px;padding-top:20px;border-top:2px solid var(--rule);color:var(--ink-soft);font-size:13.5px}
+  code{font-family:"Space Mono",monospace;background:var(--panel);padding:2px 6px;border-radius:5px;border:1px solid var(--rule)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="kicker">Dayshift Coffee</span>
+    <h1>Four ways to build the site.</h1>
+    <p class="lede">
+      Concept pages for a coffee shop that also runs a mobile cart for weddings and
+      events. Every name, price and address here is a placeholder — swap the tokens
+      at the top of a file and it's yours.
+    </p>
+    <div class="grid">
+      <a class="card" href="morning-rush.html">
+        <span class="tag">Illustrated · looping scene</span>
+        <h2>The Morning Rush</h2>
+        <p>Four regulars order in turn, a barista works the machine, a live cups counter
+           ticks up on the chalkboard. Warm, colourful, autoplaying.</p>
+      </a>
+      <a class="card" href="crema.html">
+        <span class="tag">WebGL · scroll-scrubbed</span>
+        <h2>Crema</h2>
+        <p>A fragment-shader crema hero and a sticky espresso extraction that fills
+           with scroll — yield and time tick up as you read.</p>
+      </a>
+      <a class="card" href="morning-regular.html">
+        <span class="tag">Cinematic · silhouette</span>
+        <h2>The Morning Regular</h2>
+        <p>A man walks in, orders, leaves — backlit over a haze shader, dust and steam,
+           film subtitles, a slow camera push.</p>
+      </a>
+      <a class="card" href="dayshift-coffee.html">
+        <span class="tag">Full site · calculator</span>
+        <h2>Dayshift Coffee</h2>
+        <p>The complete shop site: dial-in menu cards and a live wedding-cart quote
+           calculator — guests, hours, miles, package, add-ons.</p>
+      </a>
+    </div>
+    <footer>
+      Each page is a single self-contained <code>.html</code> file — no build step,
+      no dependencies beyond Google Fonts. Open any of them directly or link to it on its own.
+    </footer>
+  </div>
+</body>
+</html>

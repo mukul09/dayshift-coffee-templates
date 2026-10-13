@@ -1,0 +1,1072 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Morning Rush</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Figtree:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap">
+
+<style>
+/* Layout: a 16:9 room drawn in SVG, a live sky shader sitting behind the window hole,
+   and a particle canvas over the top for dust and confetti. Four regulars come through
+   on a loop. Shadows are plum, never black — that is what keeps the colour clean. */
+:root{
+  --bg:#FFF4E2; --bg2:#FFE9CB; --panel:#FFFBF2;
+  --ink:#3B2146; --ink-soft:#7A5B80; --rule:#E3C9C0;
+
+  --wall:#2BA3A6; --wallDk:#1A7D84; --wallLt:#4FC0BE;
+  --floorA:#F5C4CF; --floorB:#E899AC; --floorLine:#C8718A;
+  --counter:#F2AE33; --counterDk:#C9801A; --counterLt:#FFD37A;
+  --wood:#A85B2B; --woodDk:#7E3F1C;
+  --cream:#FFF6E6; --coral:#FF6B5A; --coralDk:#D6453C;
+  --plum:#43224F; --line:#3A1C45;
+  --leaf:#3FA66B; --leafDk:#2A7A4C;
+  --steel:#D9E2E6; --steelDk:#9FB0B8; --copper:#D97E3F;
+  --sparkA:#FF6B5A; --sparkB:#F2AE33; --sparkC:#4FC0BE; --sparkD:#FFF6E6;
+  --skyA:#7FD8F0; --skyB:#D8F3FB; --cloud:#FFFFFF; --sunC:#FFE89B;
+  --bubBg:#FFF6E6; --bubInk:#3B2146; --accent:#D6453C; --band:#EF523E;
+  --glow:0;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#1A1020; --bg2:#231629; --panel:#271A2E;
+  --ink:#F7E9DC; --ink-soft:#B79BBE; --rule:#432C4A;
+  --wall:#14555E; --wallDk:#0C3A42; --wallLt:#1E7079;
+  --floorA:#54304A; --floorB:#3E2238; --floorLine:#6A4060;
+  --counter:#C98A22; --counterDk:#8A5A12; --counterLt:#E8B34E;
+  --wood:#7A4220; --woodDk:#532B13;
+  --cream:#F2E3CE; --coral:#E05647; --coralDk:#A6342C;
+  --plum:#1E0E26; --line:#17091C;
+  --leaf:#2E7A50; --leafDk:#1C5235;
+  --steel:#A9B6BC; --steelDk:#6E7C84; --copper:#B2652F;
+  --sparkA:#FF8B6A; --sparkB:#F2C05A; --sparkC:#5FD0CC; --sparkD:#FFF0D4;
+  --skyA:#17295E; --skyB:#3C3F7E; --cloud:#5A5E96; --sunC:#FFD089;
+  --bubBg:#F4E6D2; --bubInk:#2A1230; --accent:#FF9173; --band:#B23F2F;
+  --glow:1;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#1A1020; --bg2:#231629; --panel:#271A2E;
+  --ink:#F7E9DC; --ink-soft:#B79BBE; --rule:#432C4A;
+  --wall:#14555E; --wallDk:#0C3A42; --wallLt:#1E7079;
+  --floorA:#54304A; --floorB:#3E2238; --floorLine:#6A4060;
+  --counter:#C98A22; --counterDk:#8A5A12; --counterLt:#E8B34E;
+  --wood:#7A4220; --woodDk:#532B13;
+  --cream:#F2E3CE; --coral:#E05647; --coralDk:#A6342C;
+  --plum:#1E0E26; --line:#17091C;
+  --leaf:#2E7A50; --leafDk:#1C5235;
+  --steel:#A9B6BC; --steelDk:#6E7C84; --copper:#B2652F;
+  --sparkA:#FF8B6A; --sparkB:#F2C05A; --sparkC:#5FD0CC; --sparkD:#FFF0D4;
+  --skyA:#17295E; --skyB:#3C3F7E; --cloud:#5A5E96; --sunC:#FFD089;
+  --bubBg:#F4E6D2; --bubInk:#2A1230; --accent:#FF9173; --band:#B23F2F;
+  --glow:1;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Figtree",system-ui,sans-serif; font-size:17px; line-height:1.62;
+  overflow-x:hidden; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.disp{font-family:"Fredoka","Figtree",sans-serif;font-weight:600;margin:0;line-height:1.02;letter-spacing:-.01em;text-wrap:balance}
+.mono{font-family:"Space Mono",monospace;font-variant-numeric:tabular-nums}
+.wrap{width:100%;max-width:1200px;margin:0 auto;padding-inline:20px}
+a{color:inherit}
+
+/* ---------- nav ---------- */
+.nav{
+  position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;z-index:60;
+  font-size:14px;border-bottom:2px solid transparent;transition:background .4s,border-color .4s
+}
+.navin{display:flex;align-items:center;gap:16px;padding:12px 20px;margin-inline:auto}
+.nav.solid{background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(10px);border-bottom-color:var(--line)}
+.brand{font-family:"Fredoka",sans-serif;font-weight:600;font-size:21px;text-decoration:none;color:var(--cream);text-shadow:0 2px 0 rgba(58,28,69,.55)}
+.nav.solid .brand{color:var(--ink);text-shadow:none}
+.links{margin-left:auto;display:flex;gap:18px}
+.links a{text-decoration:none;color:var(--cream);font-weight:700;text-shadow:0 2px 0 rgba(58,28,69,.5)}
+.nav.solid .links a{color:var(--ink);text-shadow:none}
+@media (max-width:720px){.links{display:none}}
+@media (max-height:480px){
+  .nav{position:static;background:none;border-bottom-color:transparent}
+  .navin{padding:7px 16px}
+  .nav .brand,.nav .links a{color:var(--ink);text-shadow:none}
+}
+.swatch{
+  width:34px;height:34px;border-radius:50%;cursor:pointer;display:grid;place-items:center;
+  border:2.5px solid var(--line);background:var(--cream);color:var(--line);box-shadow:0 3px 0 var(--line)
+}
+.swatch:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+
+/* ---------- stage ---------- */
+.stage{position:relative;width:min(100%,1760px,calc((100svh - 54px)*2.2));margin-inline:auto;height:clamp(230px,56.25vw,calc(100svh - 54px));overflow:hidden;background:var(--wall)}
+/* the window hole is at 110..430 x, 120..420 y of a 1600x900 board */
+#sky{position:absolute;left:6.875%;top:13.333%;width:20%;height:33.333%;display:block;z-index:1}
+.scene{position:absolute;inset:0;width:100%;height:100%;z-index:2}
+#fx{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
+.stage::after{
+  content:"";position:absolute;left:0;right:0;top:0;height:72px;z-index:4;pointer-events:none;
+  background:linear-gradient(to bottom,rgba(38,16,46,.42) 0,rgba(38,16,46,.12) 58%,rgba(38,16,46,0) 100%)
+}
+.vig{
+  position:absolute;inset:0;z-index:4;pointer-events:none;
+  background:radial-gradient(118% 92% at 50% 44%,transparent 54%,rgba(40,16,48,.34) 100%)
+}
+.title{
+  position:absolute;z-index:5;left:0;right:0;bottom:clamp(12px,2.6vw,30px);pointer-events:none
+}
+.hero{position:relative}
+.title .wrap{pointer-events:auto}
+.kicker{
+  display:inline-block;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+  background:var(--band);color:#FFF6E6;padding:5px 12px;border:2.5px solid var(--line);border-radius:999px;
+  box-shadow:0 3px 0 var(--line)
+}
+h1{
+  font-size:clamp(30px,5.8vw,76px);color:var(--cream);margin-top:12px;max-width:12ch;
+  text-shadow:0 5px 0 var(--line),0 0 22px rgba(58,28,69,.45)
+}
+h1 .ln{display:block;overflow:hidden;padding-bottom:.06em}
+h1 .ln > span{display:block;transform:translateY(106%);animation:rise 1s cubic-bezier(.2,1,.3,1) forwards}
+h1 .ln:nth-child(2) > span{animation-delay:.1s}
+@keyframes rise{to{transform:none}}
+/* on a phone the frame is cropped to the counter, so the title moves above the action
+   instead of sitting on top of whoever is being served */
+@media (max-width:760px){
+  /* no room to letter over the action on a phone, so the title sits under the strip */
+  .title{position:static;padding:20px 0 2px;pointer-events:auto}
+  h1{font-size:clamp(26px,7.4vw,40px);max-width:14ch;margin-top:12px;color:var(--ink);text-shadow:none}
+  .kicker{font-size:10px;padding:5px 11px;letter-spacing:.14em}
+}
+
+/* speech bubble */
+.bub{
+  position:absolute;z-index:5;left:58%;bottom:46%;transform-origin:12% 100%;transform:scale(.4);
+  background:var(--bubBg);color:var(--bubInk);line-height:1.32;
+  border:clamp(2px,calc(var(--sw,1200px)*.0024),3.5px) solid var(--line);
+  border-radius:clamp(10px,calc(var(--sw,1200px)*.012),18px);
+  padding:clamp(4px,calc(var(--sw,1200px)*.006),9px) clamp(7px,calc(var(--sw,1200px)*.0106),16px);
+  font-family:"Fredoka",sans-serif;font-weight:500;
+  font-size:clamp(11.5px,calc(var(--sw,1200px)*.0125),18px);
+  max-width:min(calc(var(--sw,1200px)*.34),240px);
+  box-shadow:0 clamp(2px,calc(var(--sw,1200px)*.0033),5px) 0 var(--line);
+  opacity:0;transition:opacity .18s ease,transform .32s cubic-bezier(.34,1.56,.64,1)
+}
+.bub.show{opacity:1;transform:scale(1)}
+
+/* counter ticker */
+.ticker{
+  position:absolute;z-index:5;right:3.2%;top:21%;text-align:center;pointer-events:none;display:grid;place-content:center;
+  font-family:"Fredoka",sans-serif;color:var(--cream)
+}
+.ticker .lab{font-size:min(calc(var(--tw,160px)*.085),calc(var(--th,90px)*.2));letter-spacing:.14em;text-transform:uppercase;opacity:.85;white-space:nowrap}
+.ticker .num{font-family:"Space Mono",monospace;font-weight:700;font-size:min(calc(var(--tw,160px)*.3),calc(var(--th,90px)*.62));line-height:1}
+/* a cropped board leaves a slate about 50px wide, so the chalk shrinks to fit it */
+.ticker.tiny{gap:0}
+.ticker.tiny .lab{font-size:max(6px,min(calc(var(--tw,160px)*.115),calc(var(--th,90px)*.22)));letter-spacing:.06em;opacity:.9}
+.ticker.tiny .num{font-size:min(calc(var(--tw,160px)*.34),calc(var(--th,90px)*.6))}
+/* when the chalkboard is cropped away (phones, phone landscape) the count moves onto a
+   pill inside the frame rather than disappearing */
+.ticker.pill{
+  display:flex;place-content:unset;align-items:center;gap:8px;
+  width:auto!important;height:auto!important;
+  background:var(--bubBg);color:var(--bubInk);border:2.5px solid var(--line);
+  border-radius:999px;padding:4px 12px;box-shadow:0 3px 0 var(--line)
+}
+.ticker.pill .lab{display:block;font-size:8px;letter-spacing:.1em;opacity:.75}
+.ticker.pill .num{font-size:15px}
+@media (max-width:760px){
+  .ticker.pill{gap:6px;padding:3px 9px;border-width:2px;box-shadow:0 2px 0 var(--line)}
+  .ticker.pill .lab{font-size:7.5px}
+  .ticker.pill .num{font-size:13px}
+}
+.ticker .num.pop{animation:pop .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.35) rotate(-4deg)}100%{transform:scale(1)}}
+
+/* ---------- rig ---------- */
+.leg,.arm{transform-box:fill-box;transform-origin:top center}
+.cust.walk .legA,.cust.walk .armB{animation:swA .52s ease-in-out infinite}
+.cust.walk .legB,.cust.walk .armA{animation:swB .52s ease-in-out infinite}
+.cust.walk .body{animation:bob .26s ease-in-out infinite}
+@keyframes swA{0%,100%{transform:rotate(27deg)}50%{transform:rotate(-25deg)}}
+@keyframes swB{0%,100%{transform:rotate(-25deg)}50%{transform:rotate(27deg)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.body{transform-box:fill-box;transform-origin:bottom center}
+.cust.land .body{animation:land .5s cubic-bezier(.3,1.5,.5,1)}
+@keyframes land{0%{transform:scale(1.1,.86)}55%{transform:scale(.96,1.05)}100%{transform:scale(1,1)}}
+.cust.cheer .body{animation:cheer .62s cubic-bezier(.3,1.5,.5,1) 2}
+@keyframes cheer{0%,100%{transform:translateY(0) scale(1,1)}25%{transform:translateY(-22px) scale(.95,1.07)}60%{transform:translateY(0) scale(1.07,.93)}}
+.cust.talk .head{animation:talk .3s ease-in-out 4 alternate}
+.head{transform-box:fill-box;transform-origin:bottom center}
+@keyframes talk{from{transform:rotate(-2.5deg) translateY(0)}to{transform:rotate(2.5deg) translateY(-3px)}}
+.hairT{transform-box:fill-box;transform-origin:top center;animation:swish 1.6s ease-in-out infinite alternate}
+@keyframes swish{from{transform:rotate(-4deg)}to{transform:rotate(5deg)}}
+.earf{transform-box:fill-box;transform-origin:top center;animation:swish .7s ease-in-out infinite alternate}
+#mara.work .mArm{animation:work .34s ease-in-out infinite alternate}
+.mArm{transform-box:fill-box;transform-origin:top center}
+@keyframes work{from{transform:rotate(-16deg)}to{transform:rotate(16deg)}}
+#mara .mHead{transform-box:fill-box;transform-origin:bottom center;animation:mbob 2.6s ease-in-out infinite alternate}
+@keyframes mbob{from{transform:translateY(0) rotate(-1.5deg)}to{transform:translateY(-4px) rotate(1.5deg)}}
+.tail{transform-box:fill-box;transform-origin:left center;animation:tail 3.1s ease-in-out infinite alternate}
+@keyframes tail{from{transform:rotate(-7deg)}to{transform:rotate(12deg)}}
+.plant{transform-box:fill-box;transform-origin:top center;animation:swish 4.2s ease-in-out infinite alternate}
+.steamp{animation:stm 2.6s ease-in-out infinite;opacity:0}
+.steamp.d2{animation-delay:.9s}.steamp.d3{animation-delay:1.8s}
+@keyframes stm{0%{opacity:0;transform:translateY(4px) scaleX(.6)}25%{opacity:.75}100%{opacity:0;transform:translateY(-46px) scaleX(1.4)}}
+.cupIn{transform-box:fill-box;transform-origin:bottom center;animation:cupIn .5s cubic-bezier(.34,1.7,.5,1)}
+@keyframes cupIn{0%{transform:scale(.2,.4) translateY(20px)}60%{transform:scale(1.14,.92)}100%{transform:scale(1,1)}}
+.grainR{mix-blend-mode:overlay;opacity:.13;pointer-events:none}
+.lampOn{opacity:var(--glow);transition:opacity .6s ease}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important}
+  h1 .ln > span{transform:none}
+}
+
+/* ---------- page ---------- */
+section{position:relative}
+.sheet{padding-block:clamp(52px,8vw,110px)}
+.eyebrow{display:inline-block;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:700}
+h2{font-size:clamp(28px,5vw,58px);margin-top:14px}
+.lede{max-width:56ch;color:var(--ink-soft);margin-top:16px}
+.rev{opacity:0;transform:translateY(20px);transition:opacity .7s cubic-bezier(.2,1,.3,1),transform .7s cubic-bezier(.2,1,.3,1)}
+.rev.in{opacity:1;transform:none}
+@supports (animation-timeline: view()){
+  @media (prefers-reduced-motion:no-preference){
+    .rev{opacity:1;transform:none;animation:revIn linear both;animation-timeline:view();animation-range:entry 6% cover 30%}
+    @keyframes revIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+  }
+}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:38px}
+.card{
+  background:var(--panel);border:3px solid var(--line);border-radius:16px;padding:20px;min-width:0;
+  box-shadow:0 6px 0 var(--line);transition:transform .18s ease,box-shadow .18s ease
+}
+.card:hover{transform:translateY(-3px);box-shadow:0 9px 0 var(--line)}
+.card .dot{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);display:grid;place-items:center;font-size:15px;font-weight:900;font-family:"Fredoka",sans-serif;color:#2A1230}
+.card h3{font-size:21px;margin-top:12px;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.card .p{font-family:"Space Mono",monospace;font-size:14px;color:var(--accent);font-weight:700}
+.card p{margin:8px 0 0;color:var(--ink-soft);font-size:15px}
+.card .spec{margin-top:12px;padding-top:10px;border-top:2px dashed var(--rule);font-family:"Space Mono",monospace;font-size:12px;display:flex;gap:4px 14px;flex-wrap:wrap}
+.band{
+  margin-top:40px;background:var(--band);border:3px solid var(--line);border-radius:20px;
+  padding:clamp(20px,3.6vw,38px);box-shadow:0 8px 0 var(--line);color:#FFF6E6;
+  display:grid;grid-template-columns:1.2fr .8fr;gap:clamp(20px,3vw,40px);align-items:center
+}
+@media (max-width:820px){.band{grid-template-columns:1fr}}
+.band h2{color:#FFF6E6}
+.band .lede{color:#FFF1EB}
+.facts{list-style:none;margin:0;padding:0;font-size:15px}
+.facts li{padding:8px 0 8px 20px;border-bottom:2px dotted rgba(255,246,230,.4);position:relative}
+.facts li::before{content:"";position:absolute;left:0;top:18px;width:10px;height:3px;border-radius:2px;background:var(--cream)}
+.cta{
+  display:inline-flex;align-items:center;gap:8px;margin-top:20px;cursor:pointer;text-decoration:none;
+  background:var(--bubBg);color:var(--bubInk);border:3px solid var(--line);border-radius:999px;
+  padding:11px 22px;font-family:"Fredoka",sans-serif;font-weight:600;font-size:15.5px;
+  box-shadow:0 5px 0 var(--line);transition:transform .14s,box-shadow .14s
+}
+.cta:hover{transform:translateY(-2px);box-shadow:0 7px 0 var(--line)}
+.cta:active{transform:translateY(3px);box-shadow:0 2px 0 var(--line)}
+.copyline{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:16px}
+.copyline code{font-family:"Space Mono",monospace;font-size:15px;user-select:all}
+.mini{
+  cursor:pointer;background:transparent;border:2.5px solid #FFF6E6;color:#FFF6E6;
+  border-radius:999px;padding:5px 12px;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700
+}
+.note{border-left:4px solid var(--coral);padding-left:14px;color:var(--ink-soft);font-size:14px;margin-top:28px;max-width:60ch}
+footer{border-top:3px solid var(--line);padding-block:26px;color:var(--ink-soft);font-size:13.5px}
+.foot{display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between;align-items:baseline}
+:focus-visible{outline:3px solid var(--coral);outline-offset:3px}
+</style>
+
+<nav class="nav">
+  <div class="navin">
+  <a class="brand" href="#top">Dayshift</a>
+  <span class="links"><a href="#bar">The bar</a><a href="#cart">The cart</a></span>
+  <button class="swatch" id="themeBtn" aria-label="Day or evening">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.4"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.5 1.5M17.1 17.1l1.5 1.5M18.6 5.4l-1.5 1.5M6.9 17.1l-1.5 1.5" stroke-linecap="round"/>
+    </svg>
+  </button>
+  </div>
+</nav>
+
+<div class="hero">
+<header class="stage" id="top">
+  <canvas id="sky" aria-hidden="true"></canvas>
+
+  <svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" role="img"
+       aria-label="A bright cartoon coffee bar. Four regulars come in one after another, order, and leave with their cups.">
+    <defs>
+      <linearGradient id="wallG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="var(--wallLt)"/><stop offset="1" stop-color="var(--wall)"/>
+      </linearGradient>
+      <linearGradient id="counterG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="var(--counterLt)"/><stop offset="1" stop-color="var(--counter)"/>
+      </linearGradient>
+      <linearGradient id="shaft" x1="0" y1="0" x2=".4" y2="1">
+        <stop offset="0" stop-color="#FFF3C8" stop-opacity=".55"/><stop offset="1" stop-color="#FFF3C8" stop-opacity="0"/>
+      </linearGradient>
+      <radialGradient id="bulbG"><stop offset="0" stop-color="#FFE6A0" stop-opacity=".9"/><stop offset="1" stop-color="#FFE6A0" stop-opacity="0"/></radialGradient>
+      <pattern id="tiles" width="120" height="60" patternUnits="userSpaceOnUse">
+        <rect width="120" height="60" fill="var(--floorA)"/>
+        <path d="M60 0 120 30 60 60 0 30Z" fill="var(--floorB)"/>
+      </pattern>
+      <filter id="grainF"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+      <clipPath id="board"><rect x="0" y="0" width="1600" height="900"/></clipPath>
+      <mask id="wallMask">
+        <rect x="0" y="0" width="1600" height="690" fill="#FFFFFF"/>
+        <rect x="110" y="120" width="320" height="300" fill="#000000"/>
+      </mask>
+    </defs>
+
+    <g clip-path="url(#board)" stroke-linejoin="round" stroke-linecap="round">
+      <!-- wall + floor -->
+      <rect x="0" y="0" width="1600" height="680" fill="url(#wallG)" mask="url(#wallMask)"/>
+      <rect x="0" y="680" width="1600" height="220" fill="url(#tiles)"/>
+      <rect x="0" y="668" width="1600" height="16" fill="var(--wallDk)"/>
+      <rect x="0" y="684" width="1600" height="6" fill="var(--floorLine)" opacity=".5"/>
+      <g opacity=".35" stroke="var(--wallDk)" stroke-width="3" mask="url(#wallMask)"><path d="M0 240h1600M0 420h1600"/></g>
+
+      <!-- window frame (sky canvas shows through the hole) -->
+      <g>
+        <rect x="110" y="120" width="320" height="300" fill="none" stroke="var(--wood)" stroke-width="38"/>
+        <rect x="91" y="101" width="358" height="338" rx="8" fill="none" stroke="var(--line)" stroke-width="6"/>
+        <rect x="129" y="139" width="282" height="262" fill="none" stroke="var(--line)" stroke-width="6"/>
+        <path d="M270 139v262M129 270h282" stroke="var(--wood)" stroke-width="16"/>
+        <path d="M270 139v262M129 270h282" stroke="var(--line)" stroke-width="3" opacity=".45"/>
+        <rect x="76" y="432" width="388" height="22" rx="8" fill="var(--wood)" stroke="var(--line)" stroke-width="5"/>
+        <path d="M140 454 410 454 690 680 330 680Z" fill="url(#shaft)"/>
+      </g>
+
+      <!-- hanging plants -->
+      <g class="plant">
+        <path d="M560 0v176" stroke="var(--line)" stroke-width="5"/>
+        <path d="M512 176h96l-14 54h-68Z" fill="var(--coral)" stroke="var(--line)" stroke-width="5"/>
+        <path d="M560 176c-30 10-48 46-40 86 16-26 28-42 40-50s26 20 44 44c10-42-12-72-44-80Z" fill="var(--leaf)" stroke="var(--line)" stroke-width="5"/>
+      </g>
+      <g class="plant" style="animation-duration:5.4s">
+        <path d="M700 0v150" stroke="var(--line)" stroke-width="5"/>
+        <path d="M658 150h84l-12 46h-60Z" fill="var(--leafDk)" stroke="var(--line)" stroke-width="5"/>
+        <path d="M700 150c-26 8-42 40-34 74 14-22 24-36 34-42s22 16 38 38c8-36-10-62-38-70Z" fill="var(--leaf)" stroke="var(--line)" stroke-width="5"/>
+      </g>
+
+      <!-- ceiling lamps -->
+      <g>
+        <path d="M440 0v226" stroke="var(--line)" stroke-width="5"/>
+        <path d="M392 280q48-66 96 0Z" fill="var(--coral)" stroke="var(--line)" stroke-width="5.5"/>
+        <circle cx="440" cy="288" r="9" fill="#FFE6A0" stroke="var(--line)" stroke-width="3"/>
+        <circle cx="440" cy="302" r="110" fill="url(#bulbG)" class="lampOn"/>
+        <path d="M1240 0v200" stroke="var(--line)" stroke-width="5"/>
+        <path d="M1196 254q44-62 88 0Z" fill="var(--counter)" stroke="var(--line)" stroke-width="5.5"/>
+        <circle cx="1240" cy="262" r="9" fill="#FFE6A0" stroke="var(--line)" stroke-width="3"/>
+        <circle cx="1240" cy="276" r="100" fill="url(#bulbG)" class="lampOn"/>
+      </g>
+
+      <!-- shelf with bags -->
+      <g>
+        <rect x="770" y="236" width="400" height="18" rx="6" fill="var(--wood)" stroke="var(--line)" stroke-width="5"/>
+        <g stroke="var(--line)" stroke-width="5">
+          <path d="M800 236v-70q0-10 10-10h40q10 0 10 10v70Z" fill="var(--coral)"/>
+          <path d="M876 236v-58q0-10 10-10h36q10 0 10 10v58Z" fill="var(--leaf)"/>
+          <path d="M946 236v-76q0-10 10-10h42q10 0 10 10v76Z" fill="var(--counter)"/>
+          <rect x="1030" y="190" width="42" height="46" rx="6" fill="var(--cream)"/>
+          <rect x="1090" y="198" width="42" height="38" rx="6" fill="var(--wallDk)"/>
+        </g>
+        <path d="M806 180h44M882 190h32M952 174h48" stroke="var(--line)" stroke-width="4" opacity=".45"/>
+      </g>
+
+      <!-- chalkboard ticker frame -->
+      <g>
+        <rect x="1300" y="150" width="236" height="170" rx="12" fill="var(--wood)" stroke="var(--line)" stroke-width="6"/>
+        <rect x="1318" y="168" width="200" height="134" rx="6" fill="var(--plum)"/>
+      </g>
+
+      <!-- counter -->
+      <g>
+        <rect x="60" y="540" width="1230" height="34" rx="12" fill="url(#counterG)" stroke="var(--line)" stroke-width="6"/>
+        <rect x="76" y="574" width="1198" height="214" fill="var(--counterDk)" stroke="var(--line)" stroke-width="6"/>
+        <g stroke="var(--line)" stroke-width="4" opacity=".35">
+          <path d="M240 580v200M420 580v200M600 580v200M780 580v200M960 580v200M1140 580v200"/>
+        </g>
+        <rect x="76" y="640" width="1198" height="10" fill="var(--counterLt)" opacity=".45"/>
+      </g>
+
+      <!-- espresso machine -->
+      <g>
+        <rect x="380" y="382" width="250" height="158" rx="16" fill="var(--steel)" stroke="var(--line)" stroke-width="6"/>
+        <rect x="380" y="382" width="250" height="34" rx="14" fill="var(--copper)" stroke="var(--line)" stroke-width="6"/>
+        <rect x="402" y="430" width="206" height="54" rx="10" fill="var(--steelDk)" stroke="var(--line)" stroke-width="5"/>
+        <circle cx="440" cy="457" r="17" fill="var(--counter)" stroke="var(--line)" stroke-width="5"/>
+        <circle cx="570" cy="457" r="17" fill="var(--coral)" stroke="var(--line)" stroke-width="5"/>
+        <rect x="470" y="492" width="70" height="18" rx="8" fill="var(--copper)" stroke="var(--line)" stroke-width="5"/>
+        <path d="M372 420q-26 14-28 56" fill="none" stroke="var(--steelDk)" stroke-width="12"/>
+        <path d="M372 420q-26 14-28 56" fill="none" stroke="var(--line)" stroke-width="4"/>
+        <g fill="none" stroke="var(--cream)" stroke-width="7">
+          <path class="steamp" d="M408 370c-8-14 8-20 0-34s6-18 6-18"/>
+          <path class="steamp d2" d="M432 370c-8-14 8-20 0-34s6-18 6-18"/>
+          <path class="steamp d3" d="M456 370c-8-14 8-20 0-34s6-18 6-18"/>
+        </g>
+        <g stroke="var(--line)" stroke-width="4" fill="var(--cream)">
+          <rect x="406" y="356" width="28" height="22" rx="5"/><rect x="446" y="356" width="28" height="22" rx="5"/>
+        </g>
+      </g>
+
+      <!-- cat asleep on the counter -->
+      <g stroke="var(--line)" stroke-width="5.5">
+        <ellipse cx="180" cy="508" rx="62" ry="32" fill="var(--plum)"/>
+        <circle cx="134" cy="490" r="26" fill="var(--plum)"/>
+        <path d="M118 472l-4-20 18 10ZM150 468l8-18 6 18Z" fill="var(--plum)"/>
+        <path class="tail" d="M240 500q34 6 24 34" fill="none" stroke-width="12"/>
+      </g>
+      <g stroke="var(--cream)" stroke-width="3.5" fill="none" opacity=".9">
+        <path d="M124 490h14M142 494q5 4 10 0"/>
+      </g>
+
+      <!-- ===== MARA, behind the counter ===== -->
+      <g id="mara" stroke="var(--line)" stroke-width="6">
+        <g class="mArm"><rect x="612" y="430" width="30" height="96" rx="15" fill="var(--coral)"/><circle cx="627" cy="530" r="18" fill="#F3C094"/></g>
+        <path d="M640 540V450q0-56 60-56t60 56v90Z" fill="var(--leaf)"/>
+        <path d="M700 394q60 0 60 56v90h-40V452q0-40-20-58Z" fill="var(--leafDk)" stroke="none"/>
+        <path d="M672 452h56v44h-56Z" fill="var(--cream)"/>
+        <path d="M700 394v-26" stroke-width="30" stroke="#F3C094"/>
+        <g class="mHead">
+          <circle cx="700" cy="330" r="48" fill="#F3C094"/>
+          <path d="M700 282a48 48 0 0 1 0 96q26-20 26-48t-26-48Z" fill="#D89E6E" stroke="none"/>
+          <path d="M654 324c0-36 20-56 46-56s46 20 46 56c-6-20-22-32-46-32s-40 12-46 32Z" fill="var(--coral)"/>
+          <circle cx="748" cy="312" r="22" fill="var(--coral)"/>
+          <circle cx="684" cy="334" r="6.5" fill="var(--line)" stroke="none"/>
+          <circle cx="716" cy="334" r="6.5" fill="var(--line)" stroke="none"/>
+          <circle cx="686" cy="331" r="2.4" fill="#fff" stroke="none"/><circle cx="718" cy="331" r="2.4" fill="#fff" stroke="none"/>
+          <path d="M688 356q12 14 26 2" fill="none" stroke-width="5"/>
+          <circle cx="668" cy="350" r="9" fill="var(--coral)" stroke="none" opacity=".55"/>
+          <circle cx="734" cy="348" r="8" fill="var(--coral)" stroke="none" opacity=".5"/>
+        </g>
+        <g class="mArm" style="animation-delay:-.17s"><rect x="758" y="430" width="30" height="96" rx="15" fill="var(--coral)"/><circle cx="773" cy="530" r="18" fill="#F3C094"/></g>
+      </g>
+
+      <!-- the drink on the counter -->
+      <g id="drink" transform="translate(912,540)" opacity="0">
+        <g stroke="var(--line)" stroke-width="6">
+          <path d="M-26 0h52l-7-56a12 12 0 0 0-12-10h-14a12 12 0 0 0-12 10Z" fill="var(--cream)"/>
+          <path id="drinkFill" d="M-22 -14h44l-5 -38h-34Z" fill="var(--coral)" stroke="none"/>
+          <path d="M-26 0h52l-7-56a12 12 0 0 0-12-10h-14a12 12 0 0 0-12 10Z" fill="none"/>
+          <path d="M26 -48q20 2 20 16t-20 14" fill="none"/>
+        </g>
+      </g>
+      <!-- the dog's tiny cup -->
+      <g id="pupcup" transform="translate(848,540)" opacity="0">
+        <g stroke="var(--line)" stroke-width="5">
+          <path d="M-15 0h30l-4-32a8 8 0 0 0-8-6h-6a8 8 0 0 0-8 6Z" fill="var(--cream)"/>
+          <ellipse cx="0" cy="-36" rx="15" ry="7" fill="var(--cream)"/>
+        </g>
+      </g>
+
+      <!-- ===== CUSTOMERS ===== -->
+      <!-- 1. Gus, with a dog in his pocket -->
+      <g class="cust" id="c1" opacity="0" transform="translate(1500,0)"
+         style="--main:#F2AE33;--mainSh:#C9801A;--pants:#3E6FA8;--pantsSh:#2C5181;--skin:#C98B5E;--shoe:#43224F">
+        <g transform="translate(0,830) scale(1.50)" stroke="var(--line)" stroke-width="5.5">
+          <ellipse cx="0" cy="6" rx="60" ry="11" fill="var(--plum)" opacity=".2" stroke="none"/>
+          <g class="leg legA"><rect x="-28" y="-88" width="26" height="80" rx="13" fill="var(--pantsSh)"/><path d="M-38 -16h32a12 12 0 0 1 12 12v8h-44Z" fill="var(--shoe)"/></g>
+          <g class="leg legB"><rect x="4" y="-88" width="26" height="80" rx="13" fill="var(--pants)"/><path d="M-6 -16h32a12 12 0 0 1 12 12v8H-6Z" fill="var(--shoe)"/></g>
+          <g class="body">
+            <g class="arm armA"><rect x="-66" y="-196" width="26" height="92" rx="13" fill="var(--mainSh)"/><circle cx="-53" cy="-100" r="15" fill="var(--skin)"/></g>
+            <rect x="-50" y="-204" width="100" height="124" rx="30" fill="var(--main)"/>
+            <path d="M14 -204h36a30 30 0 0 1 30 30v64a30 30 0 0 1-30 30H14Z" fill="var(--mainSh)" stroke="none"/>
+            <rect x="-46" y="-150" width="40" height="34" rx="8" fill="var(--mainSh)"/>
+            <g class="earf"><path d="M-40 -150q-10-16 2-22t14 10Z" fill="#8A5A3A"/></g>
+            <circle cx="-26" cy="-152" r="18" fill="#B9794E"/>
+            <circle cx="-32" cy="-154" r="3.6" fill="var(--line)" stroke="none"/>
+            <circle cx="-20" cy="-154" r="3.6" fill="var(--line)" stroke="none"/>
+            <path d="M-26 -144q4 4 8 0" fill="none" stroke-width="4"/>
+            <g class="head">
+              <circle cx="0" cy="-252" r="48" fill="var(--skin)"/>
+              <path d="M0 -300a48 48 0 0 1 0 96q26-20 26-48t-26-48Z" fill="#A86E45" stroke="none"/>
+              <path d="M-46 -258q0-40 46-40t46 40q-14-16-46-16t-46 16Z" fill="var(--coral)"/>
+              <rect x="-50" y="-262" width="100" height="16" rx="8" fill="var(--coralDk)"/>
+              <path d="M-34 -236q10 36 34 36t34-36q0 48-34 52t-34-52Z" fill="#6B4A32"/>
+              <circle cx="-18" cy="-256" r="6" fill="var(--line)" stroke="none"/>
+              <circle cx="10" cy="-256" r="6" fill="var(--line)" stroke="none"/>
+              <circle cx="-16" cy="-258.5" r="2.2" fill="#fff" stroke="none"/><circle cx="12" cy="-258.5" r="2.2" fill="#fff" stroke="none"/>
+              <path d="M-28 -272q10-6 18-2M2 -274q10-4 18 2" fill="none" stroke-width="5"/>
+            </g>
+            <g class="arm armB"><rect x="38" y="-196" width="26" height="92" rx="13" fill="var(--main)"/><circle cx="51" cy="-100" r="15" fill="var(--skin)"/></g>
+          </g>
+        </g>
+      </g>
+
+      <!-- 2. Priya, mid-run -->
+      <g class="cust" id="c2" opacity="0" transform="translate(1500,0)"
+         style="--main:#59D6A0;--mainSh:#2FA57A;--pants:#43224F;--pantsSh:#2E1437;--skin:#8A5A38;--shoe:#FF6B5A">
+        <g transform="translate(0,830) scale(1.34)" stroke="var(--line)" stroke-width="5.5">
+          <ellipse cx="0" cy="6" rx="52" ry="10" fill="var(--plum)" opacity=".2" stroke="none"/>
+          <g class="leg legA"><rect x="-24" y="-92" width="24" height="84" rx="12" fill="var(--skin)"/><path d="M-34 -16h30a12 12 0 0 1 12 12v8h-42Z" fill="var(--shoe)"/></g>
+          <g class="leg legB"><rect x="2" y="-92" width="24" height="84" rx="12" fill="#A06B45"/><path d="M-8 -16h30a12 12 0 0 1 12 12v8H-8Z" fill="var(--shoe)"/></g>
+          <g class="body">
+            <g class="arm armA"><rect x="-58" y="-188" width="24" height="86" rx="12" fill="var(--skin)"/><circle cx="-46" cy="-98" r="14" fill="var(--skin)"/></g>
+            <path d="M-42 -196h84a26 26 0 0 1 26 26v62a26 26 0 0 1-26 26h-84a26 26 0 0 1-26-26v-62a26 26 0 0 1 26-26Z" fill="var(--main)"/>
+            <path d="M10 -196h32a26 26 0 0 1 26 26v62a26 26 0 0 1-26 26H10Z" fill="var(--mainSh)" stroke="none"/>
+            <path d="M-42 -160h110" stroke="var(--cream)" stroke-width="7" opacity=".8"/>
+            <g class="head">
+              <circle cx="0" cy="-246" r="45" fill="var(--skin)"/>
+              <path d="M0 -291a45 45 0 0 1 0 90q24-18 24-45t-24-45Z" fill="#6E4428" stroke="none"/>
+              <path d="M-44 -252q2-38 44-38t44 38q-14-16-44-16t-44 16Z" fill="#2E1437"/>
+              <rect x="-48" y="-262" width="96" height="18" rx="9" fill="var(--coral)"/>
+              <g class="hairT"><path d="M40 -268q40 10 44 60t-26 72q18-54 2-86t-20-46Z" fill="#2E1437"/></g>
+              <circle cx="-16" cy="-250" r="6" fill="var(--line)" stroke="none"/>
+              <circle cx="12" cy="-250" r="6" fill="var(--line)" stroke="none"/>
+              <circle cx="-14" cy="-252.5" r="2.2" fill="#fff" stroke="none"/><circle cx="14" cy="-252.5" r="2.2" fill="#fff" stroke="none"/>
+              <path d="M-14 -228q14 14 28 0" fill="none" stroke-width="5"/>
+              <circle cx="-30" cy="-234" r="9" fill="var(--coral)" stroke="none" opacity=".45"/>
+            </g>
+            <g class="arm armB"><rect x="34" y="-188" width="24" height="86" rx="12" fill="var(--skin)"/><circle cx="46" cy="-98" r="14" fill="var(--skin)"/></g>
+          </g>
+        </g>
+      </g>
+
+      <!-- 3. Mo, skateboard under the arm -->
+      <g class="cust" id="c3" opacity="0" transform="translate(1500,0)"
+         style="--main:#6C7BE8;--mainSh:#4654B8;--pants:#F2AE33;--pantsSh:#C9801A;--skin:#F0C193;--shoe:#FFF6E6">
+        <g transform="translate(0,830) scale(1.30)" stroke="var(--line)" stroke-width="5.5">
+          <ellipse cx="0" cy="6" rx="54" ry="10" fill="var(--plum)" opacity=".2" stroke="none"/>
+          <g class="leg legA"><rect x="-26" y="-90" width="25" height="82" rx="12" fill="var(--pantsSh)"/><path d="M-36 -16h31a12 12 0 0 1 12 12v8h-43Z" fill="var(--shoe)"/></g>
+          <g class="leg legB"><rect x="3" y="-90" width="25" height="82" rx="12" fill="var(--pants)"/><path d="M-7 -16h31a12 12 0 0 1 12 12v8H-7Z" fill="var(--shoe)"/></g>
+          <g class="body">
+            <g class="arm armA"><rect x="-60" y="-192" width="25" height="88" rx="12" fill="var(--mainSh)"/><circle cx="-47" cy="-100" r="14" fill="var(--skin)"/></g>
+            <rect x="-46" y="-200" width="92" height="118" rx="28" fill="var(--main)"/>
+            <path d="M12 -200h34a28 28 0 0 1 28 28v62a28 28 0 0 1-28 28H12Z" fill="var(--mainSh)" stroke="none"/>
+            <path d="M-20 -200q20 22 40 0" fill="none" stroke-width="5"/>
+            <!-- skateboard -->
+            <g transform="rotate(-16 56 -150)">
+              <rect x="34" y="-212" width="34" height="132" rx="17" fill="var(--coral)"/>
+              <circle cx="51" cy="-190" r="9" fill="var(--cream)"/><circle cx="51" cy="-104" r="9" fill="var(--cream)"/>
+            </g>
+            <g class="head">
+              <circle cx="0" cy="-250" r="46" fill="var(--skin)"/>
+              <path d="M0 -296a46 46 0 0 1 0 92q25-19 25-46t-25-46Z" fill="#D29C68" stroke="none"/>
+              <path d="M-46 -254q0-42 46-42t46 42q-14-18-46-18t-46 18Z" fill="var(--wallDk)"/>
+              <path d="M-48 -258h58q10 0 10 10v6h-68Z" fill="var(--wall)"/>
+              <circle cx="-16" cy="-250" r="6" fill="var(--line)" stroke="none"/>
+              <circle cx="12" cy="-250" r="6" fill="var(--line)" stroke="none"/>
+              <circle cx="-14" cy="-252.5" r="2.2" fill="#fff" stroke="none"/><circle cx="14" cy="-252.5" r="2.2" fill="#fff" stroke="none"/>
+              <path d="M-12 -230q12 12 26 0" fill="none" stroke-width="5"/>
+              <!-- headphones -->
+              <path d="M-50 -258a50 42 0 0 1 100 0" fill="none" stroke-width="8"/>
+              <rect x="-62" y="-262" width="24" height="34" rx="10" fill="var(--coral)"/>
+              <rect x="38" y="-262" width="24" height="34" rx="10" fill="var(--coral)"/>
+            </g>
+            <g class="arm armB"><rect x="36" y="-192" width="25" height="88" rx="12" fill="var(--main)"/><circle cx="48" cy="-100" r="14" fill="var(--skin)"/></g>
+          </g>
+        </g>
+      </g>
+
+      <!-- 4. Nana Rose -->
+      <g class="cust" id="c4" opacity="0" transform="translate(1500,0)"
+         style="--main:#B57BD6;--mainSh:#8A51AC;--pants:#43224F;--pantsSh:#2E1437;--skin:#EBC3A0;--shoe:#43224F">
+        <g transform="translate(0,830) scale(1.18)" stroke="var(--line)" stroke-width="6">
+          <ellipse cx="0" cy="6" rx="52" ry="10" fill="var(--plum)" opacity=".2" stroke="none"/>
+          <g class="leg legA"><rect x="-24" y="-84" width="24" height="76" rx="12" fill="var(--pantsSh)"/><path d="M-34 -16h30a12 12 0 0 1 12 12v8h-42Z" fill="var(--shoe)"/></g>
+          <g class="leg legB"><rect x="2" y="-84" width="24" height="76" rx="12" fill="var(--pants)"/><path d="M-8 -16h30a12 12 0 0 1 12 12v8H-8Z" fill="var(--shoe)"/></g>
+          <g class="body">
+            <g class="arm armA"><rect x="-58" y="-188" width="24" height="86" rx="12" fill="var(--mainSh)"/><circle cx="-46" cy="-98" r="14" fill="var(--skin)"/>
+              <path d="M-72 -96h52l8 44h-68Z" fill="var(--coral)"/></g>
+            <path d="M-46 -196h92v88a28 28 0 0 1-28 28h-36a28 28 0 0 1-28-28Z" fill="var(--main)"/>
+            <path d="M8 -196h38v88a28 28 0 0 1-28 28H8Z" fill="var(--mainSh)" stroke="none"/>
+            <path d="M-20 -196v110M0 -196v110" stroke="var(--mainSh)" stroke-width="4" opacity=".7"/>
+            <g class="head">
+              <circle cx="0" cy="-244" r="44" fill="var(--skin)"/>
+              <path d="M0 -288a44 44 0 0 1 0 88q24-18 24-44t-24-44Z" fill="#C9A17E" stroke="none"/>
+              <circle cx="-2" cy="-276" r="34" fill="var(--cream)"/>
+              <path d="M-86 -272q86-34 172 0q-86 26-172 0Z" fill="var(--coral)"/>
+              <path d="M-86 -272q86-34 172 0" fill="none"/>
+              <circle cx="46" cy="-282" r="15" fill="var(--counter)"/>
+              <circle cx="46" cy="-282" r="5" fill="var(--cream)" stroke="none"/>
+              <circle cx="-16" cy="-246" r="5.5" fill="var(--line)" stroke="none"/>
+              <circle cx="12" cy="-246" r="5.5" fill="var(--line)" stroke="none"/>
+              <path d="M-28 -246a12 12 0 0 0 24 0M0 -246a12 12 0 0 0 24 0M-4 -250h4" fill="none" stroke-width="3.5"/>
+              <path d="M-12 -224q12 12 24 0" fill="none" stroke-width="5"/>
+              <circle cx="-30" cy="-230" r="9" fill="var(--coral)" stroke="none" opacity=".5"/>
+              <circle cx="26" cy="-230" r="8" fill="var(--coral)" stroke="none" opacity=".45"/>
+            </g>
+            <g class="arm armB"><rect x="34" y="-188" width="24" height="86" rx="12" fill="var(--main)"/><circle cx="46" cy="-98" r="14" fill="var(--skin)"/></g>
+          </g>
+        </g>
+      </g>
+
+      <!-- foreground stool -->
+      <g stroke="var(--line)" stroke-width="6">
+        <rect x="1380" y="690" width="150" height="26" rx="13" fill="var(--coral)"/>
+        <path d="M1416 716v150M1494 716v150" stroke-width="14"/>
+        <path d="M1406 800h114" stroke-width="10"/>
+      </g>
+
+      <rect x="0" y="0" width="1600" height="900" filter="url(#grainF)" class="grainR"/>
+    </g>
+  </svg>
+
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div class="vig"></div>
+
+  <div class="ticker">
+    <div class="lab">Cups today</div>
+    <div class="num" id="tick">38</div>
+  </div>
+
+  <div class="bub" id="bub"></div>
+
+</header>
+  <div class="title">
+    <div class="wrap">
+      <span class="kicker">412 Kettle Street &middot; open 6:30</span>
+      <h1>
+        <span class="ln"><span>Everybody</span></span>
+        <span class="ln"><span>gets a name.</span></span>
+      </h1>
+    </div>
+  </div>
+</div>
+
+<section class="sheet" id="bar">
+  <div class="wrap">
+    <p class="eyebrow rev">On bar this week</p>
+    <h2 class="rev">Two coffees at a time, changed when the bag runs out.</h2>
+    <p class="lede rev">Every number here is the one chalked on the board this morning. If a shot tastes off, say so and we will pull it again while you wait.</p>
+    <div class="cards">
+      <div class="card rev"><div class="dot" style="background:#FF9E8E">1</div>
+        <h3>Espresso <span class="p">$3.50</span></h3>
+        <p>Chelbesa, Ethiopia. Jasmine, white peach, bergamot finish.</p>
+        <div class="spec"><span>18.5 &rarr; 41 g</span><span>27 s</span><span>93.0&deg;C</span></div></div>
+      <div class="card rev"><div class="dot" style="background:#F7C65C">2</div>
+        <h3>Cortado <span class="p">$4.25</span></h3>
+        <p>Four ounces, whole milk, steamed to 55&deg;C so you can drink it standing up.</p>
+        <div class="spec"><span>1:1.5</span><span>no syrup</span></div></div>
+      <div class="card rev"><div class="dot" style="background:#7ADCA6">3</div>
+        <h3>Batch brew <span class="p">$3.00</span></h3>
+        <p>La Esperanza, Huila. Nectarine, panela, cocoa nib. Refill free if you stay.</p>
+        <div class="spec"><span>1:16.5</span><span>92&deg;C</span><span>4:30</span></div></div>
+      <div class="card rev"><div class="dot" style="background:#6FD3D6">4</div>
+        <h3>Cold brew <span class="p">$4.75</span></h3>
+        <p>Colombia with a little Brazil for body, cut one to one. Thick, never sour.</p>
+        <div class="spec"><span>1:8</span><span>18 h at 4&deg;C</span></div></div>
+      <div class="card rev"><div class="dot" style="background:#DBABF0">5</div>
+        <h3>Decaf, properly <span class="p">$3.50</span></h3>
+        <p>Sugarcane EA from Huila. Chemical free and it still tastes like fruit.</p>
+        <div class="spec"><span>19 &rarr; 44 g</span><span>29 s</span></div></div>
+      <div class="card rev"><div class="dot" style="background:#AEB7F5">6</div>
+        <h3>Babyccino <span class="p">free</span></h3>
+        <p>Four ounces of foam with cocoa on top, in a real cup with a real saucer.</p>
+        <div class="spec"><span>0 mg caffeine</span><span>served first</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sheet" id="cart">
+  <div class="wrap">
+    <div class="band rev">
+      <div>
+        <p class="eyebrow" style="color:#FFE7DF">Off-site</p>
+        <h2>The same bar, on wheels, at your wedding.</h2>
+        <p class="lede">Same grinder, same machine, same people who work Tuesday morning. One outlet and a level patch of ground is all your venue has to find. About $14 a guest, and the flower girls drink free.</p>
+        <div class="copyline"><code id="mail">hello@dayshift.coffee</code><button class="mini" id="copyBtn">Copy</button></div>
+        <a class="cta" href="#bar">See what is on bar</a>
+      </div>
+      <ul class="facts">
+        <li>7&prime;6&Prime; &times; 3&prime;2&Prime; cart, fits a 36&Prime; door</li>
+        <li>One 20A / 120V circuit, or our battery bank</li>
+        <li>12 gal fresh in, 12 gal waste out</li>
+        <li>90 min to set up, 45 to strike</li>
+        <li>$2M liability, COI to your venue</li>
+      </ul>
+    </div>
+    <p class="note">Owner: the name, street, prices and the four regulars are placeholders. Every colour in the scene is a token at the top of the file, so a rebrand is a short edit.</p>
+  </div>
+</section>
+
+<footer><div class="wrap foot">
+  <span>Dayshift Coffee &middot; 412 Kettle Street &middot; the cat is called Pressure Gauge</span>
+  <span class="mono" style="font-size:11.5px">Sky drawn live in WebGL.</span>
+</div></footer>
+
+<script>
+(function(){
+"use strict";
+var root=document.documentElement;
+var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+try{ var st=localStorage.getItem('rush-theme'); if(st) root.setAttribute('data-theme',st); }catch(e){}
+document.getElementById('themeBtn').addEventListener('click',function(){
+  var cur=root.getAttribute('data-theme');
+  if(!cur) cur=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+  root.setAttribute('data-theme',cur==='dark'?'light':'dark');
+  try{ localStorage.setItem('rush-theme',root.getAttribute('data-theme')); }catch(e){}
+  readPal();
+});
+
+/* ---------- sky in the window ---------- */
+var sky=document.getElementById('sky'), gl=null, u={}, raf=null, visible=true, pal={a:[0,0,0],b:[0,0,0],c:[0,0,0],s:[0,0,0]};
+function hx(h){ h=(h||'').trim(); if(h[0]==='#') h=h.slice(1);
+  if(h.length===3) h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  var n=parseInt(h,16); if(isNaN(n)) return [0,0,0];
+  return [((n>>16)&255)/255,((n>>8)&255)/255,(n&255)/255]; }
+function readPal(){
+  var cs=getComputedStyle(root);
+  pal.a=hx(cs.getPropertyValue('--skyA')); pal.b=hx(cs.getPropertyValue('--skyB'));
+  pal.c=hx(cs.getPropertyValue('--cloud')); pal.s=hx(cs.getPropertyValue('--sunC'));
+}
+readPal();
+var VS='attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+var FS=[
+'precision highp float;',
+'uniform vec2 uRes; uniform float uT; uniform vec3 cA; uniform vec3 cB; uniform vec3 cC; uniform vec3 cS;',
+'float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}',
+'float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);',
+' float a=hash(i),b=hash(i+vec2(1.0,0.0)),c=hash(i+vec2(0.0,1.0)),d=hash(i+vec2(1.0,1.0));',
+' return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);}',
+'float fbm(vec2 p){float v=0.0,a=0.5;for(int i=0;i<4;i++){v+=a*noise(p);p*=2.06;a*=0.5;}return v;}',
+'void main(){',
+' vec2 uv=gl_FragCoord.xy/uRes;',
+' vec3 col=mix(cB,cA,pow(clamp(uv.y,0.0,1.0),0.8));',
+' vec2 s=vec2(0.76,0.84); float d=length((uv-s)*vec2(uRes.x/uRes.y,1.0));',
+' col+=cS*exp(-d*3.4)*0.75;',
+' col+=cS*smoothstep(0.10,0.07,d)*0.8;',
+' float t=uT*0.02;',
+' float c1=fbm(vec2(uv.x*2.6+t,uv.y*4.4));',
+' float c2=fbm(vec2(uv.x*5.0-t*1.4,uv.y*7.0+2.0));',
+' float band=smoothstep(0.18,0.46,uv.y)*(1.0-smoothstep(0.62,1.0,uv.y));',
+' float dens=clamp((c1*0.8+c2*0.3-0.36)*2.6,0.0,1.0)*band;',
+' col=mix(col,cC,dens*0.95);',
+' col+=cS*smoothstep(0.42,0.62,dens)*exp(-d*2.2)*0.3;',
+' gl_FragColor=vec4(col,1.0);',
+'}'].join('\n');
+function comp(t,src){ var s=gl.createShader(t); gl.shaderSource(s,src); gl.compileShader(s);
+  return gl.getShaderParameter(s,gl.COMPILE_STATUS)?s:null; }
+function initGL(){
+  try{ gl=sky.getContext('webgl',{antialias:false,alpha:false,powerPreference:'low-power'})||sky.getContext('experimental-webgl'); }catch(e){ gl=null; }
+  if(!gl) return false;
+  var vs=comp(gl.VERTEX_SHADER,VS), fs=comp(gl.FRAGMENT_SHADER,FS);
+  if(!vs||!fs) return false;
+  var pr=gl.createProgram(); gl.attachShader(pr,vs); gl.attachShader(pr,fs); gl.linkProgram(pr);
+  if(!gl.getProgramParameter(pr,gl.LINK_STATUS)) return false;
+  gl.useProgram(pr);
+  var b=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  var loc=gl.getAttribLocation(pr,'p');
+  gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  ['uRes','uT','cA','cB','cC','cS'].forEach(function(k){ u[k]=gl.getUniformLocation(pr,k); });
+  return true;
+}
+function sizeSky(){
+  var r=sky.getBoundingClientRect(), s=Math.min(window.devicePixelRatio||1,2)*0.85;
+  var w=Math.max(2,Math.round(r.width*s)), h=Math.max(2,Math.round(r.height*s));
+  if(sky.width!==w||sky.height!==h){ sky.width=w; sky.height=h; if(gl) gl.viewport(0,0,w,h); }
+}
+function drawSky(ts){
+  raf=null; if(!gl) return;
+  sizeSky();
+  gl.uniform2f(u.uRes,sky.width,sky.height);
+  gl.uniform1f(u.uT,(ts||0)*0.001);
+  gl.uniform3fv(u.cA,pal.a); gl.uniform3fv(u.cB,pal.b); gl.uniform3fv(u.cC,pal.c); gl.uniform3fv(u.cS,pal.s);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+  if(!reduce&&visible) raf=requestAnimationFrame(drawSky);
+}
+var glOK=initGL();
+if(glOK){ sizeSky(); drawSky(0); addEventListener('resize',function(){ sizeSky(); if(!raf) raf=requestAnimationFrame(drawSky); }); }
+else{ sky.style.background='linear-gradient(to bottom,var(--skyA),var(--skyB))'; }
+
+/* ---------- dust + confetti ---------- */
+var fx=document.getElementById('fx'), c2=fx.getContext('2d'), motes=[], conf=[], praf=null, fw=0, fh=0;
+function sizeFx(){
+  var r=fx.getBoundingClientRect(), d=Math.min(window.devicePixelRatio||1,2);
+  fw=r.width; fh=r.height;
+  fx.width=Math.max(2,Math.round(fw*d)); fx.height=Math.max(2,Math.round(fh*d));
+  c2.setTransform(d,0,0,d,0,0);
+  motes=[];
+  var n=Math.max(16,Math.min(42,Math.round(fw/26)));
+  for(var i=0;i<n;i++) motes.push(mkMote());
+}
+function mkMote(){ return {x:Math.random()*fw*0.42,y:Math.random()*fh,r:.8+Math.random()*2,vy:-4-Math.random()*10,vx:4+Math.random()*10,ph:Math.random()*6.3,a:.2+Math.random()*.45}; }
+var COL=['--sparkA','--sparkB','--sparkC','--sparkD'];
+function burst(vx,vy){
+  var cs=getComputedStyle(root);
+  var px=(vx/1600)*fw, py=(vy/900)*fh;
+  for(var i=0;i<26;i++){
+    var a=Math.random()*6.283, sp=60+Math.random()*190;
+    conf.push({x:px,y:py,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-90,r:2.5+Math.random()*4.5,
+      rot:Math.random()*6.3,vr:(Math.random()-.5)*12,life:0,max:.9+Math.random()*.7,
+      c:cs.getPropertyValue(COL[i%4]).trim()||'#fff'});
+  }
+  if(!praf&&!reduce) praf=requestAnimationFrame(stepFx);
+}
+var lastT=0;
+function stepFx(ts){
+  praf=null;
+  var dt=Math.min(.05,(ts-lastT)/1000||.016); lastT=ts;
+  c2.clearRect(0,0,fw,fh);
+  for(var i=0;i<motes.length;i++){
+    var p=motes[i];
+    p.ph+=dt*1.1; p.x+=(p.vx+Math.sin(p.ph)*5)*dt; p.y+=p.vy*dt;
+    if(p.y<-8||p.x>fw*0.5){ motes[i]=mkMote(); motes[i].y=fh+6; }
+    c2.globalAlpha=p.a*(1-p.x/(fw*0.5))*0.95;
+    c2.fillStyle='#FFF0C0';
+    c2.beginPath(); c2.arc(p.x,p.y,p.r,0,6.2832); c2.fill();
+  }
+  for(var j=conf.length-1;j>=0;j--){
+    var k=conf[j]; k.life+=dt;
+    if(k.life>k.max){ conf.splice(j,1); continue; }
+    k.vy+=620*dt; k.x+=k.vx*dt; k.y+=k.vy*dt; k.rot+=k.vr*dt;
+    c2.save(); c2.translate(k.x,k.y); c2.rotate(k.rot);
+    c2.globalAlpha=Math.max(0,1-k.life/k.max);
+    c2.fillStyle=k.c; c2.fillRect(-k.r,-k.r*.6,k.r*2,k.r*1.2);
+    c2.restore();
+  }
+  c2.globalAlpha=1;
+  if(!reduce&&visible) praf=requestAnimationFrame(stepFx);
+}
+sizeFx();
+if(!reduce) praf=requestAnimationFrame(stepFx);
+addEventListener('resize',function(){ sizeFx(); if(!praf&&!reduce) praf=requestAnimationFrame(stepFx); });
+
+/* ---------- the rush ---------- */
+var bub=document.getElementById('bub'), tick=document.getElementById('tick'),
+    drink=document.getElementById('drink'), pup=document.getElementById('pupcup'),
+    fill=document.getElementById('drinkFill'), mara=document.getElementById('mara'),
+    stage=document.querySelector('.stage'), scene=document.querySelector('.scene'),
+    tickerEl=document.querySelector('.ticker');
+
+/* the overlays are HTML, so anchor them to real points in the artwork instead of to
+   percentages of the box — otherwise they drift whenever the scene is cropped */
+function pt(x,y){
+  var m=scene.getScreenCTM(); if(!m) return null;
+  var p=scene.createSVGPoint(); p.x=x; p.y=y; return p.matrixTransform(m);
+}
+function layout(){
+  var st=stage.getBoundingClientRect();
+  /* a narrow frame crops the sides, so anchor the crop on the half where the action is */
+  scene.setAttribute('preserveAspectRatio', (st.width<760 || (st.width/st.height) < 1.5) ? 'xMaxYMax slice' : 'xMidYMax slice');
+  var a=pt(110,120), b=pt(430,420);
+  if(a&&b){
+    sky.style.left=(a.x-st.left)+'px'; sky.style.top=(a.y-st.top)+'px';
+    sky.style.width=Math.max(2,b.x-a.x)+'px'; sky.style.height=Math.max(2,b.y-a.y)+'px';
+  }
+  /* the board stays the size it is drawn — the count shrinks to fit inside it instead.
+     The fixed nav only has to be dodged if its own controls actually sit over the board. */
+  var navB=document.querySelector('.nav').getBoundingClientRect().bottom;
+  var c=pt(1318,182), d=pt(1518,300);
+  var st2=stage.getBoundingClientRect();
+  if(c&&d){
+    var tw=Math.max(10,d.x-c.x), top=c.y;
+    var hit=false;
+    document.querySelectorAll('.nav .brand,.nav .links a,.nav .swatch').forEach(function(n){
+      var r=n.getBoundingClientRect();
+      if(r.right>c.x-6 && r.left<d.x+6 && r.bottom>top) hit=true;
+    });
+    if(hit) top=Math.max(top,navB+4);
+    var boardGone=(d.y-top<14||d.y>st2.bottom||tw<30);
+    tickerEl.classList.toggle('pill',boardGone);
+    tickerEl.classList.toggle('tiny',!boardGone&&tw<120);
+    tickerEl.style.visibility='visible';
+    /* "Cups today" will not fit across a cropped board, so it drops to "Cups" */
+    var lab=tickerEl.querySelector('.lab');
+    if(lab) lab.textContent=(tw<120?'Cups':'Cups today');
+    if(boardGone){
+      /* last resort: the board is off the frame entirely, so the count rides a pill in the corner */
+      tickerEl.style.left='auto'; tickerEl.style.right='10px';
+      tickerEl.style.top=Math.max(navB+8-st2.top,8)+'px';
+      tickerEl.style.removeProperty('--tw');
+    }else{
+      tickerEl.style.left=(c.x-st2.left)+'px'; tickerEl.style.right='auto';
+      tickerEl.style.top=(top-st2.top)+'px';
+      tickerEl.style.width=tw+'px'; tickerEl.style.height=Math.max(10,d.y-top)+'px';
+      tickerEl.style.setProperty('--tw',tw+'px');
+      tickerEl.style.setProperty('--th',Math.max(10,d.y-top)+'px');
+    }
+  }
+  var ni=document.querySelector('.navin');
+  if(ni) ni.style.maxWidth=Math.round(st.width)+'px';   /* keep the nav over the frame, not beside it */
+  var tiw=document.querySelector('.title .wrap');
+  if(tiw&&getComputedStyle(document.querySelector('.title')).position==='absolute')
+    tiw.style.maxWidth=Math.round(st.width)+'px';
+  stage.style.setProperty('--sw',Math.round(st.width)+'px');
+  placeBub();
+  sizeSky();
+}
+addEventListener('resize',layout);
+if(document.readyState==='complete') layout(); else addEventListener('load',layout);
+setTimeout(layout,120); setTimeout(layout,700);
+var DOOR=1500, SPOT=1040, timers=[], mraf=null, cups=38;
+
+var CAST=[
+  {id:'c1',line:'Flat white. And one for Biscuit.',colour:'--cream',pup:true,  thanks:'Good lad.'},
+  {id:'c2',line:'Cold brew, and keep the ice coming.',colour:'--plum',pup:false,thanks:'See you at seven!'},
+  {id:'c3',line:'Two babyccinos. One is for my sister.',colour:'--cream',pup:true,thanks:'Legend.'},
+  {id:'c4',line:'Decaf, dear. And I am staying.',colour:'--wood',pup:false,  thanks:'Lovely.'}
+];
+var idx=0;
+
+function later(fn,ms){ timers.push(setTimeout(fn,reduce?Math.round(ms*0.22):ms)); }
+function clearAll(){ timers.forEach(clearTimeout); timers=[]; if(mraf){ cancelAnimationFrame(mraf); mraf=null; } }
+function setX(el,x,flip){
+  el.setAttribute('transform','translate('+x.toFixed(1)+',0)'+(flip?' scale(-1,1) translate('+(-2*x).toFixed(1)+',0)':''));
+}
+function walk(el,x0,x1,sp,done){
+  var x=x0, dir=x1>x0?1:-1, flip=dir>0;
+  el.classList.add('walk');
+  function f(){
+    x+=sp*dir;
+    if((dir>0&&x>=x1)||(dir<0&&x<=x1)){ x=x1; setX(el,x,flip); el.classList.remove('walk'); mraf=null; done&&done(); return; }
+    setX(el,x,flip); mraf=requestAnimationFrame(f);
+  }
+  f();
+}
+
+/* Place the balloon so it never lands on a face. Obstacles are measured, not assumed:
+   Mara's head, the chalkboard (or the pill), the nav controls and the frame itself. */
+var curEl=null;
+function rectOf(el){ return el?el.getBoundingClientRect():null; }
+function placeBub(){
+  if(!bub) return;
+  var st=stage.getBoundingClientRect();
+  var el=curEl&&curEl.getAttribute('opacity')!=='0'?curEl:null;
+  var R=el?rectOf(el):null;
+  if(!R||!R.width){ var e=pt(1104,476); if(!e) return; R={left:e.x-60,right:e.x+60,top:e.y,bottom:e.y+120,width:120,height:120}; }
+
+  var pad=8;
+  var lo=st.left+pad, hi=st.right-pad;
+  var mh=rectOf(document.querySelector('#mara .mHead'));
+  if(mh) lo=Math.max(lo,mh.right+6);                      /* never over the barista's face */
+  var b1=pt(1300,150), b2=pt(1300,320);
+  if(b1&&b2) hi=Math.min(hi,b1.x-8);                      /* never over the chalkboard */
+  if(tickerEl.classList.contains('pill')){
+    var pr=tickerEl.getBoundingClientRect(); hi=Math.min(hi,pr.left-8);
+  }
+  if(hi-lo<90){ lo=st.left+pad; hi=st.right-pad; }        /* pathological frame: take the room we have */
+
+  var cap=Math.min(240,st.width*0.34);                     /* the balloon never grows past its own size */
+  bub.style.maxWidth=Math.max(90,Math.floor(Math.min(cap,hi-lo)))+'px';
+  bub.style.top='auto'; bub.style.right='auto';
+  var w=bub.offsetWidth, h=bub.offsetHeight;
+
+  /* the nav only matters where its own controls sit */
+  var navFloor=st.top+6;
+  document.querySelectorAll('.nav .brand,.nav .links a,.nav .swatch').forEach(function(n){
+    var r=n.getBoundingClientRect();
+    if(r.bottom>st.top && r.right>lo && r.left<hi) navFloor=Math.max(navFloor,r.bottom+4);
+  });
+
+  var top=R.top-10-h, left=R.left+R.width*0.35;
+  if(top<navFloor){                                        /* no room above the head: go beside it */
+    top=Math.max(navFloor,R.top+6);
+    left=(R.left-lo > hi-R.right) ? R.left-8-w : R.right+8;
+  }
+  left=Math.min(Math.max(left,lo),hi-w);
+  top=Math.min(Math.max(top,navFloor),st.bottom-pad-h);
+  bub.style.left=(left-st.left)+'px';
+  bub.style.bottom=(st.bottom-(top+h))+'px';
+}
+function say(text,el){
+  bub.textContent=text;
+  curEl=el||curEl;
+  layout();
+  bub.classList.add('show');
+  placeBub();
+}
+function hush(){ bub.classList.remove('show'); }
+function bumpTick(){
+  cups++; tick.textContent=cups;
+  tick.classList.remove('pop'); void tick.offsetWidth; tick.classList.add('pop');
+}
+
+/* how long a line stays up: reading time, not a fixed beat — the longest order is 37
+   characters and was holding barely 2s, which is not enough to read it */
+function hold(txt,lo,hi){ return Math.min(hi,Math.max(lo,600+txt.length*95)); }
+function serve(){
+  var cfg=CAST[idx], el=document.getElementById(cfg.id);
+  var tSay=(DOOR-SPOT)/4.2*16.7+340,                 /* walk in, then speak */
+      tHush1=tSay+hold(cfg.line,2900,5400),
+      tDrink=tHush1+1700,
+      tThanks=tDrink+900,
+      tHush2=tThanks+hold(cfg.thanks,2300,4200),
+      tExit=tHush2+120,
+      tNext=tExit+2600;
+  clearAll(); hush();
+  CAST.forEach(function(c){
+    var e=document.getElementById(c.id);
+    e.setAttribute('opacity','0'); e.classList.remove('walk','land','cheer','talk'); setX(e,DOOR,false);
+  });
+  mara.classList.remove('work');
+  drink.setAttribute('opacity','0'); pup.setAttribute('opacity','0');
+  el.setAttribute('opacity','1');
+
+  walk(el,DOOR,SPOT,4.2,function(){
+    el.classList.add('land');
+    later(function(){ el.classList.remove('land'); },520);
+    later(function(){ say(cfg.line,el); el.classList.add('talk');
+      later(function(){ el.classList.remove('talk'); },1300); },340);
+  });
+
+  later(function(){ hush(); mara.classList.add('work'); },tHush1);
+  later(function(){
+    mara.classList.remove('work');
+    fill.setAttribute('fill','var('+cfg.colour+')');
+    drink.setAttribute('opacity','1');
+    drink.classList.remove('cupIn'); void drink.getBoundingClientRect(); drink.classList.add('cupIn');
+    burst(912,470); bumpTick();
+    if(cfg.pup){
+      later(function(){
+        pup.setAttribute('opacity','1');
+        pup.classList.remove('cupIn'); void pup.getBoundingClientRect(); pup.classList.add('cupIn');
+        burst(848,480); bumpTick();
+      },420);
+    }
+  },tDrink);
+  later(function(){ el.classList.add('cheer'); say(cfg.thanks,el); },tThanks);
+  later(function(){ el.classList.remove('cheer'); hush(); },tHush2);
+  later(function(){
+    drink.setAttribute('opacity','0'); pup.setAttribute('opacity','0');
+    walk(el,SPOT,DOOR+140,6,function(){ el.setAttribute('opacity','0'); });
+  },tExit);
+  later(function(){
+    idx=(idx+1)%CAST.length;
+    serve();
+  },tNext);
+}
+
+/* pause when off screen */
+function wake(){
+  if(!raf&&!reduce&&visible&&glOK) raf=requestAnimationFrame(drawSky);
+  if(!praf&&!reduce&&visible) praf=requestAnimationFrame(stepFx);
+}
+function sleep(){ if(raf){cancelAnimationFrame(raf);raf=null;} if(praf){cancelAnimationFrame(praf);praf=null;} }
+if('IntersectionObserver' in window){
+  new IntersectionObserver(function(es){ visible=es[0].isIntersecting; if(visible) wake(); else sleep(); },{threshold:0}).observe(stage);
+}
+document.addEventListener('visibilitychange',function(){ if(document.hidden) sleep(); else wake(); });
+if(document.readyState==='complete') serve(); else addEventListener('load',serve);
+
+/* nav, reveals, copy */
+var navEl=document.querySelector('.nav');
+if('IntersectionObserver' in window){
+  new IntersectionObserver(function(es){ navEl.classList.toggle('solid',!es[0].isIntersecting); },
+    {rootMargin:'-66px 0px 0px 0px',threshold:0}).observe(document.getElementById('top'));
+}
+var hasTL=window.CSS&&CSS.supports&&CSS.supports('animation-timeline','view()');
+if(!hasTL||reduce){
+  var revs=[].slice.call(document.querySelectorAll('.rev'));
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    },{rootMargin:'0px 0px -10% 0px',threshold:.04});
+    revs.forEach(function(el){ io.observe(el); });
+  }else revs.forEach(function(el){ el.classList.add('in'); });
+}
+document.getElementById('copyBtn').addEventListener('click',function(){
+  var btn=this, el=document.getElementById('mail');
+  function flash(t){ var o=btn.textContent; btn.textContent=t; setTimeout(function(){btn.textContent=o;},1400); }
+  function sel(){ var rg=document.createRange(); rg.selectNodeContents(el);
+    var s=getSelection(); s.removeAllRanges(); s.addRange(rg); flash('Select + copy'); }
+  try{ navigator.clipboard.writeText(el.textContent).then(function(){ flash('Copied'); },sel); }catch(e){ sel(); }
+});
+})();
+</script>
+</html>
